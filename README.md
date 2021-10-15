@@ -1,6 +1,8 @@
 # PropMix: Hard Sample Filtering and Proportional MixUp for Learning with Noisy Labels
 This repository is the official implementation of [Hard Sample Filtering and Proportional MixUp for Learning with Noisy Labels](https://arxiv.org) (BMVC 2021).
 
+[The code will be uploaded soon]
+
 ## Requirements
 - This codebase is written for `python3`.
 - To install necessary python packages, run `pip install -r requirements.txt`.

@@ -1,8 +1,8 @@
 # PropMix: Hard Sample Filtering and Proportional MixUp for Learning with Noisy Labels
 This repository is the official implementation of [Hard Sample Filtering and Proportional MixUp for Learning with Noisy Labels](https://arxiv.org) (BMVC 2021).
+
 <b>Authors</b>: Filipe R. Cordeiro; Vasileios Belagiannis, Ian Reid and Gustavo Carneiro
 
-[The code will be uploaded soon]
 
 <b>Illustration</b>\
 <img src="img/propmix_scheme.png">
@@ -10,6 +10,29 @@ This repository is the official implementation of [Hard Sample Filtering and Pro
 ## Requirements
 - This codebase is written for `python3`.
 - To install necessary python packages, run `pip install -r requirements.txt`.
+
+## Training and Evaluating
+The pipeline for training with PropMix is the following:
+
+1. Self-supervised pretrain.
+
+In our paper we use [SimCLR](https://github.com/google-research/simclr) for most of the datasets. We use [moco-v2](https://github.com/facebookresearch/moco) to pre-train an InceptionResNetV2 on Webvision. Other self-supervised methods can be used as well.
+
+If you use SimCLR, run:
+
+`python simclr.py --config_env configs/env.yml --config_exp configs/pretext/<config_file.yml>`
+
+2. Clustering 
+
+`python scan.py --config_env configs/env.yml --config_exp configs/scan/<config_file.yml>`
+
+3. Train the model (using the pretraining from steps 1 and 2)
+For symmetric noise:
+
+`python propmix.py --r [0.2/0.5/0.8/0.9] --noise_mode sym --config_env configs/env.yml --config_exp configs/propmix/<config_file.yml>`
+
+For asymetric noise:
+`python propmix.py --r [0.4/0.49] --noise_mode asym --config_env configs/env.yml --config_exp configs/propmix/<config_file.yml>`
 
 
 ## License and Contributing

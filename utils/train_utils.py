@@ -126,96 +126,6 @@ def selflabel_train(train_loader, model, criterion, optimizer, epoch, ema=None):
             progress.display(i)
 
 
-def dividemix_train(p,epoch,net,net2,optimizer,labeled_trainloader,unlabeled_trainloader,criterion,lambda_u,device):
-    net.train()
-    net2.eval() #fix one network and train the other
-    
-    labeled_losses = AverageMeter('Labelled Loss', ':.4e')
-    unlabeled_losses = AverageMeter('Unlabelled Loss', ':.4e')
-    progress = ProgressMeter(len(labeled_trainloader),
-        [labeled_losses, unlabeled_losses],
-        prefix="Epoch: [{}]".format(epoch))
-
-    unlabeled_train_iter = iter(unlabeled_trainloader)    
-    num_iter = (len(labeled_trainloader.dataset)//p['batch_size'])+1
-    for batch_idx, (inputs_x, inputs_x2, labels_x, w_x) in enumerate(labeled_trainloader):      
-        try:
-            inputs_u, inputs_u2 = unlabeled_train_iter.next()
-        except:
-            unlabeled_train_iter = iter(unlabeled_trainloader)
-            inputs_u, inputs_u2 = unlabeled_train_iter.next()                 
-        batch_size = inputs_x.size(0)
-        
-        # Transform label to one-hot
-        labels_x = torch.zeros(batch_size, p['num_class']).scatter_(1, labels_x.view(-1,1), 1)        
-        w_x = w_x.view(-1,1).type(torch.FloatTensor) 
-
-        inputs_x, inputs_x2, labels_x, w_x = inputs_x.to(device), inputs_x2.to(device), labels_x.to(device), w_x.to(device)
-        inputs_u, inputs_u2 = inputs_u.to(device), inputs_u2.to(device)
-
-        with torch.no_grad():
-            # label co-guessing of unlabeled samples
-            outputs_u11 = net(inputs_u, forward_pass='dm')
-            outputs_u12 = net(inputs_u2, forward_pass='dm')
-            outputs_u21 = net2(inputs_u, forward_pass='dm')
-            outputs_u22 = net2(inputs_u2, forward_pass='dm')            
-            
-            pu = (torch.softmax(outputs_u11, dim=1) + torch.softmax(outputs_u12, dim=1) + torch.softmax(outputs_u21, dim=1) + torch.softmax(outputs_u22, dim=1)) / 4       
-            ptu = pu**(1/p['T']) # temparature sharpening
-            
-            targets_u = ptu / ptu.sum(dim=1, keepdim=True) # normalize
-            targets_u = targets_u.detach()       
-            
-            # label refinement of labeled samples
-            outputs_x = net(inputs_x, forward_pass='dm')
-            outputs_x2 = net(inputs_x2, forward_pass='dm')            
-            
-            px = (torch.softmax(outputs_x, dim=1) + torch.softmax(outputs_x2, dim=1)) / 2
-            px = w_x*labels_x + (1-w_x)*px              
-            ptx = px**(1/p['T']) # temparature sharpening 
-                       
-            targets_x = ptx / ptx.sum(dim=1, keepdim=True) # normalize           
-            targets_x = targets_x.detach()       
-        
-        # mixmatch
-        l = np.random.beta(p['alpha'], p['alpha'])        
-        l = max(l, 1-l)
-                
-        all_inputs = torch.cat([inputs_x, inputs_x2, inputs_u, inputs_u2], dim=0)
-        all_targets = torch.cat([targets_x, targets_x, targets_u, targets_u], dim=0)
-
-        idx = torch.randperm(all_inputs.size(0))
-
-        input_a, input_b = all_inputs, all_inputs[idx]
-        target_a, target_b = all_targets, all_targets[idx]
-        
-        mixed_input = l * input_a + (1 - l) * input_b        
-        mixed_target = l * target_a + (1 - l) * target_b
-                
-        logits = net(mixed_input, forward_pass='dm')
-        logits_x = logits[:batch_size*2]
-        logits_u = logits[batch_size*2:]        
-           
-        Lx, Lu, lamb = criterion(logits_x, mixed_target[:batch_size*2], logits_u, mixed_target[batch_size*2:],lambda_u, epoch+batch_idx/num_iter, p['warmup'])
-        
-        # regularization
-        prior = torch.ones(p['num_class'])/p['num_class']
-        prior = prior.to(device)        
-        pred_mean = torch.softmax(logits, dim=1).mean(0)
-        penalty = torch.sum(prior*torch.log(prior/pred_mean))
-
-        loss = Lx + lamb * Lu  + penalty
-        # compute gradient and do SGD step
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-
-        labeled_losses.update(Lx.item())
-        unlabeled_losses.update(Lu.item())
-
-        if batch_idx % 25 == 0:
-            progress.display(batch_idx)
-
 def scanmix_big_train(p,epoch,net,net2,optimizer,labeled_trainloader,unlabeled_trainloader,criterion,lambda_u,device):
     net.train()
     net2.eval() #fix one network and train the other
@@ -301,7 +211,7 @@ def scanmix_big_train(p,epoch,net,net2,optimizer,labeled_trainloader,unlabeled_t
         if batch_idx % 25 == 0:
             progress.display(batch_idx)
 
-def scanmix_train_proportional(p,epoch,net,net2,optimizer,trainloader,criterion,lambda_u,device):
+def train(p,epoch,net,net2,optimizer,trainloader,criterion,lambda_u,device):
     net.train()
     net2.eval() #fix one network and train the other
     
@@ -311,42 +221,19 @@ def scanmix_train_proportional(p,epoch,net,net2,optimizer,trainloader,criterion,
         [labeled_losses, unlabeled_losses],
         prefix="Epoch: [{}]".format(epoch))
 
-    # unlabeled_train_iter = iter(unlabeled_trainloader)    
     num_iter = (len(trainloader.dataset)//p['batch_size'])+1
-    # max_iters = ((len(labeled_trainloader.dataset)+len(unlabeled_trainloader.dataset))//p['batch_size'])+1
-    # cont_iters = 0 
-    # while(cont_iters<max_iters): #longmix 
-
+    
     for batch_idx, (inputs_x, inputs_x2, labels_x, w_x) in enumerate(trainloader):      
-        # try:
-        #     inputs_u, inputs_u2 = unlabeled_train_iter.next()
-        # except:
-        #     unlabeled_train_iter = iter(unlabeled_trainloader)
-        #     inputs_u, inputs_u2 = unlabeled_train_iter.next()                 
+                         
         batch_size = inputs_x.size(0)
         
         # Transform label to one-hot
-        # import pdb; pdb.set_trace()
         labels_x = torch.zeros(batch_size, p['num_class']).scatter_(1, labels_x.view(-1,1), 1)        
         w_x = w_x.view(-1,1).type(torch.FloatTensor) 
 
         inputs_x, inputs_x2, labels_x, w_x = inputs_x.to(device), inputs_x2.to(device), labels_x.to(device), w_x.to(device)
-        # inputs_u, inputs_u2 = inputs_u.to(device), inputs_u2.to(device)
 
         with torch.no_grad():
-            # label co-guessing of unlabeled samples
-            # outputs_u11 = net(inputs_u, forward_pass='dm')
-            # outputs_u12 = net(inputs_u2, forward_pass='dm')
-            # outputs_u21 = net2(inputs_u, forward_pass='dm')
-            # outputs_u22 = net2(inputs_u2, forward_pass='dm')  
-
-            # outputs_u11 = net(inputs_u, forward_pass='dm')          
-            
-            # pu = (torch.softmax(outputs_u11, dim=1) + torch.softmax(outputs_u12, dim=1) + torch.softmax(outputs_u21, dim=1) + torch.softmax(outputs_u22, dim=1)) / 4       
-            # ptu = pu**(1/p['T']) # temparature sharpening
-            
-            # targets_u = ptu / ptu.sum(dim=1, keepdim=True) # normalize
-            # targets_u = targets_u.detach()       
             
             # label refinement of labeled samples
             outputs_x11 = net(inputs_x, forward_pass='dm')
@@ -354,7 +241,6 @@ def scanmix_train_proportional(p,epoch,net,net2,optimizer,trainloader,criterion,
             outputs_x21 = net2(inputs_x, forward_pass='dm')
             outputs_x22 = net2(inputs_x2, forward_pass='dm')                        
             
-            #px = (torch.softmax(outputs_x, dim=1) + torch.softmax(outputs_x2, dim=1)) / 2
             px = (torch.softmax(outputs_x11, dim=1) + torch.softmax(outputs_x12, dim=1) + torch.softmax(outputs_x21, dim=1) + torch.softmax(outputs_x22, dim=1)) / 4
             px = w_x*labels_x + (1-w_x)*px              
             ptx = px**(1/p['T']) # temparature sharpening 
@@ -366,9 +252,7 @@ def scanmix_train_proportional(p,epoch,net,net2,optimizer,trainloader,criterion,
         l = np.random.beta(p['alpha'], p['alpha'])        
         l = max(l, 1-l)
                 
-        #all_inputs = torch.cat([inputs_x, inputs_x2, inputs_u, inputs_u2], dim=0)
         all_inputs = torch.cat([inputs_x, inputs_x2, inputs_x, inputs_x2], dim=0)
-        #all_targets = torch.cat([targets_x, targets_x, targets_u, targets_u], dim=0)
         all_targets = torch.cat([targets_x, targets_x, targets_x, targets_x], dim=0)
 
         idx = torch.randperm(all_inputs.size(0))
@@ -380,10 +264,7 @@ def scanmix_train_proportional(p,epoch,net,net2,optimizer,trainloader,criterion,
         mixed_target = l * target_a + (1 - l) * target_b
                 
         logits = net(mixed_input, forward_pass='dm')
-        # logits_x = logits[:batch_size*3]
-        # logits_u = logits[batch_size*3:]        
-           
-        #Lx, Lu, lamb = criterion(logits_x, mixed_target[:batch_size*3], logits_u, mixed_target[batch_size*3:],lambda_u, epoch+batch_idx/num_iter, p['warmup'])
+        
         Lx, Lu, lamb = criterion(logits, mixed_target, logits, mixed_target,lambda_u, epoch+batch_idx/num_iter, p['warmup'])
         
         # regularization
@@ -404,9 +285,6 @@ def scanmix_train_proportional(p,epoch,net,net2,optimizer,trainloader,criterion,
         if batch_idx % 25 == 0:
             progress.display(batch_idx)
 
-        # cont_iters = cont_iters + 1
-        # if cont_iters== max_iters:
-        #     break
 
 def scanmix_big_train_proportional(p,epoch,net,net2,optimizer,trainloader,criterion,lambda_u,device):
     net.train()
@@ -578,7 +456,7 @@ def scanmix_big_train_proportional(p,epoch,net,net2,optimizer,trainloader,criter
         if batch_idx % 25 == 0:
             progress.display(batch_idx)
 
-def scanmix_warmup(epoch,net,optimizer,dataloader,criterion, conf_penalty, noise_mode, device):
+def warmup(epoch,net,optimizer,dataloader,criterion, conf_penalty, noise_mode, device):
     net.train()
     losses = AverageMeter('CE-Loss', ':.4e')
     progress = ProgressMeter(len(dataloader),
@@ -590,7 +468,7 @@ def scanmix_warmup(epoch,net,optimizer,dataloader,criterion, conf_penalty, noise
         optimizer.zero_grad()
         with torch.no_grad():
             input_features = net(inputs, forward_pass='backbone')
-        outputs = net(input_features, forward_pass='dm_head')      
+        outputs = net(input_features, forward_pass='head')      
         loss = criterion(outputs, labels)  
         if noise_mode=='asym' or 'semantic' in noise_mode:  # penalize confident prediction for asymmetric noise
             penalty = conf_penalty(outputs)
@@ -608,33 +486,33 @@ def scanmix_warmup(epoch,net,optimizer,dataloader,criterion, conf_penalty, noise
         if batch_idx % 25 == 0:
             progress.display(batch_idx)
 
-def dividemix_warmup(epoch,net,optimizer,dataloader,criterion, conf_penalty, noise_mode, device):
-    net.train()
-    losses = AverageMeter('CE-Loss', ':.4e')
-    progress = ProgressMeter(len(dataloader),
-        [losses],
-        prefix="Epoch: [{}]".format(epoch))
-    num_iter = (len(dataloader.dataset)//dataloader.batch_size)+1
-    for batch_idx, (inputs, labels, path) in enumerate(dataloader):      
-        inputs, labels = inputs.to(device), labels.to(device) 
-        optimizer.zero_grad()
-        # with torch.no_grad():
-        input_features = net(inputs, forward_pass='backbone')
-        outputs = net(input_features, forward_pass='dm_head')      
-        loss = criterion(outputs, labels)  
-        if noise_mode=='asym' or 'semantic' in noise_mode:  # penalize confident prediction for asymmetric noise
-            penalty = conf_penalty(outputs)
-            L = loss + penalty    
-        elif noise_mode in ['semantic_densenet','semantic_resnet','semantic_vgg']:
-            penalty = conf_penalty(outputs)
-            L = loss + penalty     
-        elif noise_mode=='sym':   
-            L = loss
-        L.backward()  
-        optimizer.step() 
-        losses.update(L.item()) 
-        if batch_idx % 25 == 0:
-            progress.display(batch_idx)
+# def dividemix_warmup(epoch,net,optimizer,dataloader,criterion, conf_penalty, noise_mode, device):
+#     net.train()
+#     losses = AverageMeter('CE-Loss', ':.4e')
+#     progress = ProgressMeter(len(dataloader),
+#         [losses],
+#         prefix="Epoch: [{}]".format(epoch))
+#     num_iter = (len(dataloader.dataset)//dataloader.batch_size)+1
+#     for batch_idx, (inputs, labels, path) in enumerate(dataloader):      
+#         inputs, labels = inputs.to(device), labels.to(device) 
+#         optimizer.zero_grad()
+#         # with torch.no_grad():
+#         input_features = net(inputs, forward_pass='backbone')
+#         outputs = net(input_features, forward_pass='dm_head')      
+#         loss = criterion(outputs, labels)  
+#         if noise_mode=='asym' or 'semantic' in noise_mode:  # penalize confident prediction for asymmetric noise
+#             penalty = conf_penalty(outputs)
+#             L = loss + penalty    
+#         elif noise_mode in ['semantic_densenet','semantic_resnet','semantic_vgg']:
+#             penalty = conf_penalty(outputs)
+#             L = loss + penalty     
+#         elif noise_mode=='sym':   
+#             L = loss
+#         L.backward()  
+#         optimizer.step() 
+#         losses.update(L.item()) 
+#         if batch_idx % 25 == 0:
+#             progress.display(batch_idx)
 
 def scanmix_big_warmup(p,epoch,net,optimizer,dataloader,criterion, conf_penalty, noise_mode, device):
     net.train()
@@ -660,37 +538,37 @@ def scanmix_big_warmup(p,epoch,net,optimizer,dataloader,criterion, conf_penalty,
         if batch_idx % 25 == 0:
             progress.display(batch_idx)
 
-def dividemix_eval_train(args,model,all_loss,epoch,eval_loader,criterion,device):    
-    model.eval()
-    losses = torch.zeros(len(eval_loader.dataset))
-    pl = torch.zeros(len(eval_loader.dataset))    
-    with torch.no_grad():
-        for batch_idx, (inputs, targets, index) in enumerate(eval_loader):
-            inputs, targets = inputs.to(device), targets.to(device) 
-            outputs = model(inputs, forward_pass='dm')
-            _, predicted = torch.max(outputs, 1) 
-            loss = criterion(outputs, targets)  
-            for b in range(inputs.size(0)):
-                losses[index[b]]=loss[b]
-                pl[index[b]]  = predicted[b]        
-    losses = (losses-losses.min())/(losses.max()-losses.min())    # normalised losses for each image
-    all_loss.append(losses)
+# def dividemix_eval_train(args,model,all_loss,epoch,eval_loader,criterion,device):    
+#     model.eval()
+#     losses = torch.zeros(len(eval_loader.dataset))
+#     pl = torch.zeros(len(eval_loader.dataset))    
+#     with torch.no_grad():
+#         for batch_idx, (inputs, targets, index) in enumerate(eval_loader):
+#             inputs, targets = inputs.to(device), targets.to(device) 
+#             outputs = model(inputs, forward_pass='dm')
+#             _, predicted = torch.max(outputs, 1) 
+#             loss = criterion(outputs, targets)  
+#             for b in range(inputs.size(0)):
+#                 losses[index[b]]=loss[b]
+#                 pl[index[b]]  = predicted[b]        
+#     losses = (losses-losses.min())/(losses.max()-losses.min())    # normalised losses for each image
+#     all_loss.append(losses)
 
-    if args.r==0.9: # average loss over last 5 epochs to improve convergence stability
-        history = torch.stack(all_loss)
-        input_loss = history[-5:].mean(0)
-        input_loss = input_loss.reshape(-1,1)
-    else:
-        input_loss = losses.reshape(-1,1)
+#     if args.r==0.9: # average loss over last 5 epochs to improve convergence stability
+#         history = torch.stack(all_loss)
+#         input_loss = history[-5:].mean(0)
+#         input_loss = input_loss.reshape(-1,1)
+#     else:
+#         input_loss = losses.reshape(-1,1)
 
-    # fit a two-component GMM to the loss
-    gmm = GaussianMixture(n_components=2,max_iter=10,tol=1e-2,reg_covar=5e-4)
-    gmm.fit(input_loss)
-    prob = gmm.predict_proba(input_loss) 
-    prob = prob[:,gmm.means_.argmin()]         
-    return prob,all_loss,pl
+#     # fit a two-component GMM to the loss
+#     gmm = GaussianMixture(n_components=2,max_iter=10,tol=1e-2,reg_covar=5e-4)
+#     gmm.fit(input_loss)
+#     prob = gmm.predict_proba(input_loss) 
+#     prob = prob[:,gmm.means_.argmin()]         
+#     return prob,all_loss,pl
 
-def scanmix_eval_train_classes(args,model,all_loss,epoch,eval_loader,criterion,device, num_classes=100):    
+def eval_train(args,model,all_loss,epoch,eval_loader,criterion,device, num_classes=100):    
     model.eval()
     losses = torch.zeros(len(eval_loader.dataset))
     pl = torch.zeros(len(eval_loader.dataset))   

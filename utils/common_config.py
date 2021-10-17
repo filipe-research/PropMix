@@ -24,7 +24,7 @@ def get_criterion(p):
         from losses.losses import ConfidenceBasedCE
         criterion = ConfidenceBasedCE(p['confidence_threshold'], p['criterion_kwargs']['apply_class_balancing'])
     
-    elif p['criterion'] in  ['scanmix','propmix']:
+    elif p['criterion'] in  ['propmix']:
         from losses.losses import SemiLoss
         from losses.losses import SCANLoss
         return SemiLoss(), SCANLoss(**p['criterion_kwargs'])
@@ -111,9 +111,9 @@ def get_model(p, pretrain_path=None):
             assert(p['num_heads'] == 1)
         model = ClusteringModel(backbone, p['num_classes'], p['num_heads'], p['setup'])
     
-    elif p['setup'] in ['scanmix', 'dividemix','propmix']:
-        from models.models import ScanMixModel
-        model = ScanMixModel(backbone, p['num_classes'], p['num_heads'], p['setup'])
+    elif p['setup'] in ['propmix']:
+        from models.models import Model
+        model = Model(backbone, p['num_classes'], p['num_heads'], p['setup'])
 
     else:
         raise ValueError('Invalid setup {}'.format(p['setup']))
@@ -121,15 +121,9 @@ def get_model(p, pretrain_path=None):
     # Load pretrained weights
     if pretrain_path is not None and os.path.exists(pretrain_path):
         state = torch.load(pretrain_path, map_location='cpu')
-        # new_model = MyModel.load_from_checkpoint(checkpoint_path="example.ckpt")
         
         if p['setup'] == 'scan': # Weights are supposed to be transfered from contrastive training
             missing = model.load_state_dict(state, strict=False)
-            # assert(set(missing[1]) == {
-            #     'contrastive_head.0.weight', 'contrastive_head.0.bias', 
-            #     'contrastive_head.2.weight', 'contrastive_head.2.bias'}
-            #     or set(missing[1]) == {
-            #     'contrastive_head.weight', 'contrastive_head.bias'})
 
         elif p['setup'] == 'selflabel': # Weights are supposed to be transfered from scan 
             # We only continue with the best head (pop all heads first, then copy back the best head)
@@ -144,11 +138,10 @@ def get_model(p, pretrain_path=None):
             model_state['cluster_head.0.bias'] = best_head_bias
             missing = model.load_state_dict(model_state, strict=True)
         
-        elif p['setup'] == 'dividemix' or p['setup'] in ['scanmix','propmix']: # Weights are supposed to be transfered from scan 
+        elif p['setup'] in ['scanmix','propmix']: # Weights are supposed to be transfered from scan 
             # We only continue with the best head (pop all heads first, then copy back the best head)
             
             model_state = state['model']
-            # model_state = state['state_dict']
             
             all_heads = [k for k in model_state.keys() if 'cluster_head' in k]
             best_head_weight = model_state['cluster_head.%d.weight' %(state['head'])]
@@ -156,20 +149,11 @@ def get_model(p, pretrain_path=None):
             for k in all_heads:
                 model_state.pop(k)
 
-            model_state['dm_head.weight'] = best_head_weight
-            model_state['dm_head.bias'] = best_head_bias
-            model_state['sl_head.weight'] = best_head_weight
-            model_state['sl_head.bias'] = best_head_bias
+            model_state['head.weight'] = best_head_weight
+            model_state['head.bias'] = best_head_bias
+            # model_state['sl_head.weight'] = best_head_weight
+            # model_state['sl_head.bias'] = best_head_bias
             missing = model.load_state_dict(copy.deepcopy(model_state), strict=True)
-
-            # from byol.byol.model import BYOL
-            # import pdb; pdb.set_trace()
-            #
-            # byol_model = BYOL()
-            # byol_model = model.load_from_checkpoint(checkpoint_path=pretrain_path)
-            # byol_model = BYOL.load_from_checkpoint(checkpoint_path=pretrain_path, strict=False)
-            # missing = byol_model.online_encoder.encoder  #backbone
-            
             
 
         else:
@@ -188,31 +172,22 @@ def get_train_dataset(p, transform, to_augmented_dataset=False,
                         to_neighbors_dataset=False, to_noisy_dataset=False, split=None, meta_info={}):
     # Base dataset
     if p['train_db_name'] == 'cifar-10':
-        if p['setup'] in ['dividemix', 'propmix']:
+        if p['setup'] in ['propmix']:
             from data.cifar_dmix import cifar_dataset
             dataset = cifar_dataset(dataset=p['dataset'],root_dir=p['data_path'],transform=transform, meta_info=meta_info)
             to_noisy_dataset = False
         else:
             from data.cifar import CIFAR10
             dataset = CIFAR10(root=p['data_path'] , train=True, transform=transform, download=True)
-
-    # elif p['train_db_name'] == 'cifar-20':
-    #     from data.cifar import CIFAR20
-    #     dataset = CIFAR20(train=True, transform=transform, download=True)
     
     elif p['train_db_name'] == 'cifar-100':
-        if p['setup'] in ['dividemix', 'propmix']:
+        if p['setup'] in [ 'propmix']:
             from data.cifar_dmix import cifar_dataset
             dataset = cifar_dataset(dataset=p['dataset'],root_dir=p['data_path'],transform=transform, meta_info=meta_info)
             to_noisy_dataset = False
         else:
             from data.cifar import CIFAR100
             dataset = CIFAR100(root=p['data_path'], train=True, transform=transform, download=True)
-            
-
-    # elif p['train_db_name'] == 'stl-10':
-    #     from data.stl import STL10
-    #     dataset = STL10(split=split, transform=transform, download=True)
 
     elif p['train_db_name'] == 'imagenet':
         from data.imagenet import ImageNet
@@ -246,9 +221,7 @@ def get_train_dataset(p, transform, to_augmented_dataset=False,
         raise ValueError('Invalid train dataset {}'.format(p['train_db_name']))
     
     # Wrap into other dataset (__getitem__ changes)
-    # import pdb; pdb.set_trace()
-    # print('hello')
-    # import pdb; pdb.set_trace()
+
     if to_noisy_dataset:
         from data.custom_dataset import NoisyDataset
         dataset = NoisyDataset(dataset, meta_info)
@@ -269,19 +242,15 @@ def get_val_dataset(p, transform=None, to_neighbors_dataset=False, meta_info=Non
     # Base dataset
     
     if p['val_db_name'] == 'cifar-10':
-        if p['setup'] in ['dividemix', 'propmix']:
+        if p['setup'] in [ 'propmix']:
             from data.cifar_dmix import cifar_dataset
             dataset = cifar_dataset(dataset=p['dataset'],root_dir=p['data_path'],transform=transform, meta_info=meta_info)
         else:
             from data.cifar import CIFAR10
             dataset = CIFAR10(root=p['data_path'], train=False, transform=transform, download=True)
     
-    # elif p['val_db_name'] == 'cifar-20':
-    #     from data.cifar import CIFAR20
-    #     dataset = CIFAR20(train=False, transform=transform, download=True)
-
     elif p['val_db_name'] == 'cifar-100':
-        if p['setup'] in ['dividemix', 'propmix']:
+        if p['setup'] in ['propmix']:
             from data.cifar_dmix import cifar_dataset
             dataset = cifar_dataset(dataset=p['dataset'],root_dir=p['data_path'],transform=transform, meta_info=meta_info)
             
@@ -290,9 +259,9 @@ def get_val_dataset(p, transform=None, to_neighbors_dataset=False, meta_info=Non
             dataset = CIFAR100(root=p['data_path'], train=True, transform=transform, download=True)
             
 
-    elif p['val_db_name'] == 'stl-10':
-        from data.stl import STL10
-        dataset = STL10(split='test', transform=transform, download=True)
+    # elif p['val_db_name'] == 'stl-10':
+    #     from data.stl import STL10
+    #     dataset = STL10(split='test', transform=transform, download=True)
     
     # elif p['val_db_name'] == 'imagenet':
     #     from data.imagenet import ImageNet

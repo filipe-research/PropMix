@@ -68,99 +68,85 @@ class ClusteringModel(nn.Module):
 
         return out
 
-class ScanMixModel(nn.Module):
-    def __init__(self, backbone, nclusters, nheads=2, setup=None):
-        super(ScanMixModel, self).__init__()
+# class ScanMixModel(nn.Module):
+#     def __init__(self, backbone, nclusters, nheads=2, setup=None):
+#         super(ScanMixModel, self).__init__()
+#         self.backbone = backbone['backbone']
+#         self.backbone_dim = backbone['dim']
+#         self.nheads = nheads
+#         self.setup = setup
+#         assert(isinstance(self.nheads, int))
+#         self.dm_head = nn.Linear(self.backbone_dim, nclusters)
+#         self.sl_head = nn.Linear(self.backbone_dim, nclusters)
+
+#     def forward(self, x, forward_pass='default'):
+#         if forward_pass == 'default':
+#             features = self.backbone(x)
+#             out_dm = self.dm_head(features)
+#             out_sl = self.sl_head(features)
+#             return out_dm, out_sl
+
+#         elif forward_pass == 'backbone':
+#             out = self.backbone(x)
+#             return out
+
+#         elif forward_pass == 'head':
+#             out_dm = self.dm_head(x)
+#             out_sl = self.sl_head(x)
+#             return out_dm, out_sl
+
+#         elif forward_pass == 'dm':
+#             features = self.backbone(x)
+#             out = self.dm_head(features)
+#             return out
+
+#         elif forward_pass == 'sl':
+#             features = self.backbone(x)
+#             out = self.sl_head(features)
+#             return out
+
+#         elif forward_pass == 'dm_head':
+#             out = self.dm_head(x)
+#             return out
+
+#         elif forward_pass == 'sl_head':
+#             out = self.sl_head(x)
+#             return out
+        
+#         else:
+#             raise ValueError('Invalid forward pass {}'.format(forward_pass))      
+
+class Model(nn.Module):
+    def __init__(self, backbone, nclusters, nheads=1, setup=None):
+        super(Model, self).__init__()
         self.backbone = backbone['backbone']
         self.backbone_dim = backbone['dim']
         self.nheads = nheads
         self.setup = setup
         assert(isinstance(self.nheads, int))
-        self.dm_head = nn.Linear(self.backbone_dim, nclusters)
-        self.sl_head = nn.Linear(self.backbone_dim, nclusters)
+        self.head = nn.Linear(self.backbone_dim, nclusters)
+        
 
     def forward(self, x, forward_pass='default'):
         if forward_pass == 'default':
             features = self.backbone(x)
-            out_dm = self.dm_head(features)
-            out_sl = self.sl_head(features)
-            return out_dm, out_sl
-
-        elif forward_pass == 'backbone':
-            out = self.backbone(x)
-            return out
-
-        elif forward_pass == 'head':
-            out_dm = self.dm_head(x)
-            out_sl = self.sl_head(x)
-            return out_dm, out_sl
-
-        elif forward_pass == 'dm':
-            features = self.backbone(x)
-            out = self.dm_head(features)
-            return out
-
-        elif forward_pass == 'sl':
-            features = self.backbone(x)
-            out = self.sl_head(features)
-            return out
-
-        elif forward_pass == 'dm_head':
-            out = self.dm_head(x)
-            return out
-
-        elif forward_pass == 'sl_head':
-            out = self.sl_head(x)
-            return out
-        
-        else:
-            raise ValueError('Invalid forward pass {}'.format(forward_pass))      
-
-class DivideMixModel(nn.Module):
-    def __init__(self, backbone, nclusters, nheads=1, setup=None):
-        super(DivideMixModel, self).__init__()
-        self.backbone = backbone['backbone']
-        self.backbone_dim = backbone['dim']
-        self.nheads = nheads
-        self.setup = setup
-        assert(isinstance(self.nheads, int))
-        self.dm_head = nn.Linear(self.backbone_dim, nclusters)
-        # self.sl_head = nn.Linear(self.backbone_dim, nclusters)
-        
-
-    def forward(self, x, forward_pass='default'):
-        # if forward_pass == 'default':
-        #     features = self.backbone(x)
-        #     out_dm = self.dm_head(features)
-        #     # out_sl = self.sl_head(features)
-        #     return out_dm, out_sl
+            out_head = self.head(features)
+            
+            return out_head
 
         if forward_pass == 'backbone':
             out = self.backbone(x)
             return out
 
-        # elif forward_pass == 'head':
-        #     out_dm = self.dm_head(x)
-        #     # out_sl = self.sl_head(x)
-        #     return out_dm
+        elif forward_pass == 'head':
+            out = self.head(x)
+            
+            return out
 
         elif forward_pass == 'dm':
             features = self.backbone(x)
             out = self.dm_head(features)
             return out
-
-        # elif forward_pass == 'sl':
-        #     features = self.backbone(x)
-        #     out = self.sl_head(features)
-        #     return out
-
-        elif forward_pass == 'dm_head':
-            out = self.dm_head(x)
-            return out
-
-        # elif forward_pass == 'sl_head':
-        #     out = self.sl_head(x)
-        #     return out
         
         else:
             raise ValueError('Invalid forward pass {}'.format(forward_pass))   

@@ -20,7 +20,7 @@ from utils.common_config import get_train_transformations, get_val_transformatio
                                 get_val_dataset, get_val_dataloader,\
                                 get_model, get_criterion
 from utils.evaluate_utils import scanmix_test, test
-from utils.train_utils import  scanmix_warmup,  scanmix_eval_train_classes, scanmix_train_proportional
+from utils.train_utils import  warmup,  eval_train, train
 from utils.plot_utils import compute_histogram_bins, plot_gmm_remove_noisy, plot_histogram_loss, plot_modelview_histogram_loss
 
 parser = argparse.ArgumentParser(description='PropMix')
@@ -28,16 +28,11 @@ parser.add_argument('--noise_mode',  default='sym')
 parser.add_argument('--lambda_u', default=0, type=float, help='weight for unsupervised loss')
 parser.add_argument('--r', default=0, type=float, help='noise ratio')
 parser.add_argument('--seed', default=123)
-# parser.add_argument('--gpuid', default=0, type=int)
 parser.add_argument('--inference', default=None, type=str)
 parser.add_argument('--load_state_dict', default=None, type=str)
 parser.add_argument('--cudaid', default=0)
-# parser.add_argument('--dividemix_only', action='store_true')
 parser.add_argument('--strong_aug', action='store_true')
 parser.add_argument('--single_pred', action='store_true')
-# parser.add_argument('--big', action='store_true')
-# parser.add_argument('--lr_sl', type=float, default=None)
-
 parser.add_argument('--config_env',
                     help='Config file for the environment')
 parser.add_argument('--config_exp',
@@ -133,13 +128,13 @@ def get_loader(p, mode, meta_info):
         warmup_dataloader = get_train_dataloader(p, warmup_dataset, explicit_batch_size=p['batch_size']*2)
         return warmup_dataloader
 
-    elif mode == 'neighbors':
-        meta_info['mode'] = 'neighbor'
-        train_transformations = get_train_transformations(p)
-        neighbor_dataset = get_train_dataset(p, train_transformations, 
-                                        split='train', to_neighbors_dataset=True, to_noisy_dataset=p['to_noisy_dataset'], meta_info=meta_info)
-        neighbor_dataloader = get_train_dataloader(p, neighbor_dataset, explicit_batch_size=p['batch_size_scan'])
-        return neighbor_dataloader
+    # elif mode == 'neighbors':
+    #     meta_info['mode'] = 'neighbor'
+    #     train_transformations = get_train_transformations(p)
+    #     neighbor_dataset = get_train_dataset(p, train_transformations, 
+    #                                     split='train', to_neighbors_dataset=True, to_noisy_dataset=p['to_noisy_dataset'], meta_info=meta_info)
+    #     neighbor_dataloader = get_train_dataloader(p, neighbor_dataset, explicit_batch_size=p['batch_size_scan'])
+    #     return neighbor_dataloader
     
     else:
         raise NotImplementedError
@@ -217,8 +212,8 @@ def main():
         if epoch<p['warmup']:       
             warmup_trainloader = get_loader(p, 'warmup', meta_info)
             print('Warmup Net1')
-            scanmix_warmup(epoch,net1,optimizer1,warmup_trainloader, CEloss, conf_penalty, args.noise_mode, device=device)    
-            scanmix_warmup(epoch,net2,optimizer2,warmup_trainloader, CEloss, conf_penalty, args.noise_mode, device=device)
+            warmup(epoch,net1,optimizer1,warmup_trainloader, CEloss, conf_penalty, args.noise_mode, device=device)    
+            warmup(epoch,net2,optimizer2,warmup_trainloader, CEloss, conf_penalty, args.noise_mode, device=device)
             # if not args.big:
             #     scanmix_warmup(epoch,net1,optimizer1,warmup_trainloader, CEloss, conf_penalty, args.noise_mode, device=device)    
             # else:
@@ -232,8 +227,8 @@ def main():
     
         else:  
 
-            prob1,all_loss[0],pl_1, pl1_classes=scanmix_eval_train_classes(args,net1,all_loss[0], epoch, eval_loader, CE, device=device, num_classes=p['num_classes'])   
-            prob2,all_loss[1],pl_2, pl2_classes=scanmix_eval_train_classes(args,net2,all_loss[1], epoch, eval_loader, CE, device=device, num_classes=p['num_classes'])          
+            prob1,all_loss[0],pl_1, pl1_classes=eval_train(args,net1,all_loss[0], epoch, eval_loader, CE, device=device, num_classes=p['num_classes'])   
+            prob2,all_loss[1],pl_2, pl2_classes=eval_train(args,net2,all_loss[1], epoch, eval_loader, CE, device=device, num_classes=p['num_classes'])          
             # if not args.big:       
             #     prob1,all_loss[0],pl_1=scanmix_eval_train(args,net1,all_loss[0], epoch, eval_loader, CE, device=device)   
             #     prob2,all_loss[1],pl_2=scanmix_eval_train(args,net2,all_loss[1], epoch, eval_loader, CE, device=device)  
@@ -283,16 +278,16 @@ def main():
 
             idx_keep = (prob>=0.5).nonzero()[0]  
 
-            if epoch%10==0:
-                idx_clean1 = (pred1).nonzero()[0] 
-                path_plot = os.path.join(p['propmix_dir'],'plots/noisy_conf_ep%03d.png'% (epoch))
-                plot_gmm_remove_noisy(path_plot , min_margin, idx_guess_correct, idx_guess_wrong, idx_keep)
-                path_plot = os.path.join(p['propmix_dir'],'plots/sep_loss_epoch%03d.png'% (epoch))
-                plot_histogram_loss(path_plot, all_loss, inds_clean, inds_noisy)
-                path_plot = os.path.join(p['propmix_dir'],'plots/view_sep_loss_epoch%03d.png' % (epoch))
-                plot_modelview_histogram_loss(path_plot, all_loss, inds_clean, inds_noisy, idx_view_labeled=idx_clean1, idx_view_unlabeled=idx_noisy1)
+            # if epoch%10==0:
+            #     idx_clean1 = (pred1).nonzero()[0] 
+            #     path_plot = os.path.join(p['propmix_dir'],'plots/noisy_conf_ep%03d.png'% (epoch))
+            #     plot_gmm_remove_noisy(path_plot , min_margin, idx_guess_correct, idx_guess_wrong, idx_keep)
+            #     path_plot = os.path.join(p['propmix_dir'],'plots/sep_loss_epoch%03d.png'% (epoch))
+            #     plot_histogram_loss(path_plot, all_loss, inds_clean, inds_noisy)
+            #     path_plot = os.path.join(p['propmix_dir'],'plots/view_sep_loss_epoch%03d.png' % (epoch))
+            #     plot_modelview_histogram_loss(path_plot, all_loss, inds_clean, inds_noisy, idx_view_labeled=idx_clean1, idx_view_unlabeled=idx_noisy1)
 
-            print('[DM] Train Net1')
+            print('Train Net1')
 
             prob2[idx_noisy2] = 0 #set the probability of being clean to 0 (this force the label to be the prediction in the training stage)
             meta_info['probability'] = prob2
@@ -300,42 +295,20 @@ def main():
             meta_info['idx_remove'] = balanced_idx
             trainloader = get_loader(p, 'train', meta_info)
 
-            scanmix_train_proportional(p, epoch,net1,net2,optimizer1,trainloader, criterion_dm, args.lambda_u, device=device) # train net1  
+            train(p, epoch,net1,net2,optimizer1,trainloader, criterion_dm, args.lambda_u, device=device) # train net1  
 
             # if not args.big:
             #     scanmix_train(p, epoch,net1,net2,optimizer1,labeled_trainloader, unlabeled_trainloader, criterion_dm, args.lambda_u, device=device) # train net1  
             # else:
             #     scanmix_big_train(p, epoch,net1,net2,optimizer1,labeled_trainloader, unlabeled_trainloader, criterion_dm, args.lambda_u, device=device) # train net1  
             
-            print('\n[DM] Train Net2')
+            print('\nTrain Net2')
             prob1[idx_noisy1] = 0 #set the probability of being clean to 0 (this force the label to be the prediction in the training stage)
             meta_info['probability'] = prob1
             meta_info['pred'] = pred1 #doesnt matter in this approach
             meta_info['idx_remove'] = balanced_idx
             trainloader = get_loader(p, 'train', meta_info)
-            scanmix_train_proportional(p, epoch,net2,net1,optimizer2,trainloader, criterion_dm, args.lambda_u, device=device) # train net2       
-
-            # meta_info['probability'] = prob1
-            # meta_info['pred'] = pred1
-            # labeled_trainloader, unlabeled_trainloader = get_loader(p, 'train', meta_info)
-            # if not args.big:
-            #     scanmix_train(p, epoch,net2,net1,optimizer2,labeled_trainloader, unlabeled_trainloader, criterion_dm, args.lambda_u, device=device) # train net2       
-            # else:
-            #     scanmix_big_train(p, epoch,net2,net1,optimizer2,labeled_trainloader, unlabeled_trainloader, criterion_dm, args.lambda_u, device=device) # train net2       
-            
-            # if not args.dividemix_only:
-            #     for param_group in optimizer1.param_groups:
-            #         param_group['lr'] = args.lr_sl    
-            #     for param_group in optimizer2.param_groups:
-            #         param_group['lr'] = args.lr_sl  
-            #     meta_info['predicted_labels'] = pl_2   
-            #     neighbor_dataloader = get_loader(p, 'neighbors', meta_info)
-            #     print('\n[SL] Train Net1')
-            #     scanmix_scan(neighbor_dataloader, net1, criterion_sl, optimizer1, epoch, device)
-            #     meta_info['predicted_labels'] = pl_1  
-            #     neighbor_dataloader = get_loader(p, 'neighbors', meta_info)
-            #     print('\n[SL] Train Net2')
-            #     scanmix_scan(neighbor_dataloader, net2, criterion_sl, optimizer2, epoch, device)
+            train(p, epoch,net2,net1,optimizer2,trainloader, criterion_dm, args.lambda_u, device=device) # train net2       
 
         acc = test(epoch,net1,net2,test_loader, device=device)
         acc_hist.append(acc)

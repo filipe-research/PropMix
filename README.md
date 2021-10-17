@@ -5,7 +5,7 @@ This repository is the official implementation of [Hard Sample Filtering and Pro
 [The code will be uploaded soon]
 
 <b>Illustration</b>\
-<img src="./propmix_scheme.pdf">
+<img src="img/propmix_scheme.png">
 
 ## Requirements
 - This codebase is written for `python3`.

@@ -1,0 +1,60 @@
+# setup
+setup: propmix
+data_path: ../../data/cifar100/cifar-100-python
+train_db_name: cifar-100
+val_db_name: cifar-100
+dataset: cifar100
+noise_dir: ./noise/cifar100
+plots_dir: plots
+to_noisy_dataset: True
+scan_path: 'r=0.9_800ep_bs1024_preact_rn18'
+
+# Loss
+criterion: scanmix
+criterion_kwargs:
+   entropy_weight: 5.0
+
+# Hyperparameters
+num_epochs: 300
+epochs: 300
+alpha: 4
+batch_size: 64
+batch_size_scan: 128
+p_threshold: 0.7
+p_threshold2: 0.5
+T: 0.5
+num_class: 100
+num_classes: 100
+warmup: 10
+num_workers: 5
+update_cluster_head_only: False
+num_neighbors: 20
+
+# Transformations
+augmentation_strategy: dividemix 
+augmentation_kwargs:
+   crop_size: 32
+   crop_padding: 4
+   normalize:
+      mean: [0.507, 0.487, 0.441]
+      std: [0.267, 0.256, 0.276]
+   num_strong_augs: 4
+   cutout_kwargs:
+     n_holes: 1
+     length: 16
+     random: True
+
+lr: 0.02
+#optimisers
+optimizer: sgd
+optimizer_kwargs:
+  lr: 0.02
+  momentum: 0.9
+  weight_decay: 0.0005
+
+#model
+backbone: PRN18
+num_heads: 2
+
+# Scheduler
+scheduler: constant

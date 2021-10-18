@@ -143,10 +143,7 @@ class Model(nn.Module):
             
             return out
 
-        elif forward_pass == 'dm':
-            features = self.backbone(x)
-            out = self.dm_head(features)
-            return out
+        
         
         else:
             raise ValueError('Invalid forward pass {}'.format(forward_pass))   

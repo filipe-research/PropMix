@@ -1,6 +1,5 @@
 # Setup
 setup: simclr
-# noise_dir: ./noise/cifar100
 
 to_noisy_dataset: False # does not use labels
 dataset: cifar100
@@ -23,7 +22,7 @@ criterion_kwargs:
    temperature: 0.1 
 
 # Hyperparameters
-epochs: 500
+epochs: 1
 optimizer: sgd
 optimizer_kwargs:
    nesterov: False

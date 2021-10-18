@@ -25,10 +25,11 @@ def create_config(config_file_env, config_file_exp, meta_info=None):
         noise_specific = 'r={}_{}_lu{}'.format(meta_info['r'], meta_info['noise_mode'],meta_info['lambda_u'])
     pretext_dir = os.path.join(base_dir, 'pretext')
     
-    if 'pretext_path' not in cfg:   #if this key exist
+    if 'pretext_path' not in cfg:   #if this key does not exist
         # pretext_dir = os.path.join(pretext_dir, noise_specific)
         if cfg['setup']=='simclr':
-            pretext_folder = 'r={}_{}_{}ep_bs{}_{}'.format(meta_info['r'], meta_info['noise_mode'],  cfg['epochs'],cfg['batch_size'], cfg['backbone'])
+            #pretext_folder = 'r={}_{}_{}ep_bs{}_{}'.format(meta_info['r'], meta_info['noise_mode'],  cfg['epochs'],cfg['batch_size'], cfg['backbone'])
+            pretext_folder = '_{}ep_bs{}_{}'.format(cfg['epochs'],cfg['batch_size'], cfg['backbone'])
             pretext_dir = os.path.join(pretext_dir, pretext_folder)
         else:
             pretext_dir = os.path.join(pretext_dir, noise_specific)
@@ -44,13 +45,10 @@ def create_config(config_file_env, config_file_exp, meta_info=None):
     cfg['topk_neighbors_train_path'] = os.path.join(pretext_dir, 'topk-train-neighbors.npy')
     cfg['topk_neighbors_val_path'] = os.path.join(pretext_dir, 'topk-val-neighbors.npy')
 
-    # if cfg['setup'] in ['scanmix']:
-    #     cfg['topk_neighbors_train_path'] = os.path.join(base_dir, 'scanmix/topk-train-neighbors.npy')
-    #     cfg['topk_neighbors_val_path'] = None
 
     # If we perform clustering or self-labeling step we need additional paths.
     # We also include a run identifier to support multiple runs w/ same hyperparams.
-    if cfg['setup'] in ['scan', 'selflabel', 'dividemix', 'scanmix', 'propmix']:
+    if cfg['setup'] in ['scan', 'selflabel',  'propmix']:
         base_dir = os.path.join(root_dir, cfg['train_db_name'])
         scan_dir = os.path.join(base_dir, 'scan')
         
@@ -62,32 +60,29 @@ def create_config(config_file_env, config_file_exp, meta_info=None):
         else:
             scan_dir = os.path.join(scan_dir, cfg['scan_path'])
             
-            
-
         selflabel_dir = os.path.join(base_dir, 'selflabel') 
-        #dividemix_dir = os.path.join(base_dir, 'dividemix')
         
-        if cfg['setup']=='dividemix':
-            if meta_info['nopretrain']==True:
-                dividemix_dir = os.path.join(base_dir, 'nopretrain_dividemix')
-                dividemix_dir = os.path.join(dividemix_dir, cfg['backbone'])
-            else:
-                dividemix_dir = os.path.join(base_dir, 'scan+dividemix')
-                dividemix_dir = os.path.join(dividemix_dir, cfg['scan_path'])
+        
+        # if cfg['setup']=='dividemix':
+        #     if meta_info['nopretrain']==True:
+        #         dividemix_dir = os.path.join(base_dir, 'nopretrain_dividemix')
+        #         dividemix_dir = os.path.join(dividemix_dir, cfg['backbone'])
+        #     else:
+        #         dividemix_dir = os.path.join(base_dir, 'scan+dividemix')
+        #         dividemix_dir = os.path.join(dividemix_dir, cfg['scan_path'])
                 
             
-            if meta_info['strong_aug']==True:
-                dividemix_dir = os.path.join(dividemix_dir, noise_specific+'_sa')
-            else:
-                dividemix_dir = os.path.join(dividemix_dir, noise_specific)
-            mkdir_if_missing(base_dir)
-            mkdir_if_missing(dividemix_dir)
-            cfg['dividemix_dir'] = dividemix_dir
-        elif cfg['setup']=='propmix':
+        #     if meta_info['strong_aug']==True:
+        #         dividemix_dir = os.path.join(dividemix_dir, noise_specific+'_sa')
+        #     else:
+        #         dividemix_dir = os.path.join(dividemix_dir, noise_specific)
+        #     mkdir_if_missing(base_dir)
+        #     mkdir_if_missing(dividemix_dir)
+        #     cfg['dividemix_dir'] = dividemix_dir
+        if cfg['setup']=='propmix':
             propmix_dir = os.path.join(base_dir, 'propmix')
             if 'scan_path' in cfg:
                 propmix_dir = os.path.join(propmix_dir, cfg['scan_path'])
-            
             
             noise_specific = noise_specific + '_t1_%.1f_t2_%.1f'%(cfg['p_threshold'], cfg['p_threshold2'])
             # setup_name = 'r={}_{}_{}ep_bs{}_{}'.format(meta_info['r'], meta_info['noise_mode'], cfg['epochs'],cfg['batch_size'], cfg['backbone'])
@@ -101,7 +96,7 @@ def create_config(config_file_env, config_file_exp, meta_info=None):
             cfg['propmix_dir'] = propmix_dir
             
         
-        scanmix_dir = os.path.join(base_dir, 'scanmix')
+        # scanmix_dir = os.path.join(base_dir, 'scanmix')
         # if cfg['setup']=='scanmix':
         #     scanmix_dir = os.path.join(scanmix_dir, noise_specific+'_lu%d'%(meta_info['lambda_u']))
         # else:
@@ -116,9 +111,9 @@ def create_config(config_file_env, config_file_exp, meta_info=None):
         cfg['selflabel_dir'] = selflabel_dir
         cfg['selflabel_checkpoint'] = os.path.join(selflabel_dir, 'checkpoint.pth.tar')
         cfg['selflabel_model'] = os.path.join(selflabel_dir, 'model.pth.tar')
-        cfg['scanmix_dir'] = os.path.join(scanmix_dir)
-        cfg['scanmix_checkpoint'] = os.path.join(scanmix_dir, 'checkpoint.pth.tar')
-        cfg['scanmix_model'] = os.path.join(scanmix_dir, 'model.pth.tar')
+        # cfg['scanmix_dir'] = os.path.join(scanmix_dir)
+        # cfg['scanmix_checkpoint'] = os.path.join(scanmix_dir, 'checkpoint.pth.tar')
+        # cfg['scanmix_model'] = os.path.join(scanmix_dir, 'model.pth.tar')
         
 
 

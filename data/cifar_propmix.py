@@ -19,15 +19,15 @@ class cifar_dataset(Dataset):
     #def __init__(self, dataset, r, noise_mode, root_dir, transform, mode, noise_file='', pred=[], probability=[], log=''): 
     def __init__(self, dataset, root_dir, transform ,meta_info): 
         
-        #self.r = r # noise ratio
+        
         self.r = meta_info['r']
         self.transform = transform
-        # self.mode = mode  
         self.mode = meta_info['mode']
         noise_file = meta_info['noise_file']
         noise_mode = meta_info['noise_mode']
         pred = meta_info['pred']
         probability = meta_info['probability']
+        import pdb; pdb.set_trace()
         self.transition = {0:0,2:0,4:7,7:7,1:1,9:1,3:5,5:3,6:6,8:8} # class transition for asymmetric noise
      
         if self.mode=='test':

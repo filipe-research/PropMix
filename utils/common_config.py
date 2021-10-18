@@ -250,7 +250,7 @@ def get_val_dataset(p, transform=None, to_neighbors_dataset=False, meta_info=Non
     
     elif p['val_db_name'] == 'cifar-100':
         if p['setup'] in ['propmix']:
-            from data.cifar_dmix import cifar_dataset
+            from data.cifar_propmix import cifar_dataset
             dataset = cifar_dataset(dataset=p['dataset'],root_dir=p['data_path'],transform=transform, meta_info=meta_info)
             
         else:

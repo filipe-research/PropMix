@@ -19,10 +19,11 @@ def create_config(config_file_env, config_file_exp, meta_info=None):
 
     # Set paths for pretext task (These directories are needed in every stage)
     base_dir = os.path.join(root_dir, cfg['train_db_name'])
-    if cfg['setup'] in ['pretext', 'scan','simclr']:
+    # if cfg['setup'] in ['pretext', 'scan','simclr']:
+    #     noise_specific = 'r={}_{}'.format(meta_info['r'], meta_info['noise_mode'])
+    # else:
+    if cfg['setup'] in ['propmix']:
         noise_specific = 'r={}_{}'.format(meta_info['r'], meta_info['noise_mode'])
-    else:
-        noise_specific = 'r={}_{}_lu{}'.format(meta_info['r'], meta_info['noise_mode'],meta_info['lambda_u'])
     pretext_dir = os.path.join(base_dir, 'pretext')
     
     if 'pretext_path' not in cfg:   #if this key does not exist

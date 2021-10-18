@@ -28,10 +28,10 @@ parser.add_argument('--noise_mode',  default='sym')
 parser.add_argument('--r', default=0, type=float, help='noise ratio')
 parser.add_argument('--seed', default=123)
 # parser.add_argument('--inference', default=None, type=str)
-parser.add_argument('--load_state_dict', default=None, type=str)
+parser.add_argument('--load_state_dict', default=None, type=str, help='load from a saved model')
 parser.add_argument('--cudaid', default=0)
-parser.add_argument('--strong_aug', action='store_true')
-# parser.add_argument('--single_pred', action='store_true')
+parser.add_argument('--strong_aug', action='store_true', help='use strong augmentation')
+parser.add_argument('--nopt', action='store_true', help='no pretrain')
 parser.add_argument('--config_env',
                     help='Config file for the environment')
 parser.add_argument('--config_exp',
@@ -83,8 +83,11 @@ class NegEntropy(object):
 
 def create_model():
     
-    #model = get_model(p, p['scan_model'])
-    model = get_model(p, None)
+    
+    if args.nopt:
+        model = get_model(p, None)
+    else:
+        model = get_model(p, p['scan_model'])
     model = model.to(device)
     return model
 

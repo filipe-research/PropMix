@@ -34,19 +34,19 @@ meta_info = copy.deepcopy(args.__dict__)
 p = create_config(args.config_env, args.config_exp, meta_info)
 
 
-meta_info['noise_rate'] = args.r
-if args.noise_mode == 'asym':
-    meta_info['noise_file'] += '_asym'
-elif 'semantic' in args.noise_mode:
-    meta_info['noise_file'] += '_{}'.format(args.noise_mode)
+# meta_info['noise_rate'] = args.r
+# if args.noise_mode == 'asym':
+#     meta_info['noise_file'] += '_asym'
+# elif 'semantic' in args.noise_mode:
+#     meta_info['noise_file'] += '_{}'.format(args.noise_mode)
 
 # The noise mode and noise rate does not matter for simclr, because it
 # does not look to the labels. Here, it is just setting a default
 # noise mode and noise rate to genereate a noise_file (labels) for the dataloader,
 # but the value is not important.
-noise_mode = 'sym'
-meta_info['noise_rate'] = 0
-meta_info['noise_file'] += '_{}'.format(args.noise_mode)
+# noise_mode = 'sym'
+# meta_info['noise_rate'] = 0
+# meta_info['noise_file'] += '_{}'.format(args.noise_mode)
 
 # meta_info['probability'] = None
 # meta_info['pred'] = None

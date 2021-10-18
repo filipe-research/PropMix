@@ -59,7 +59,7 @@ elif args.noise_mode == 'sym':
     meta_info['noise_file'] += '_sym'
 # elif 'semantic' in args.noise_mode:
 #     meta_info['noise_file'] += '_{}'.format(args.noise_mode)
-meta_info['noise_file'] = '{}/{}'.format(p['noise_dir'],args.noise_mode)
+# meta_info['noise_file'] = '{}/{}'.format(p['noise_dir'],args.noise_mode)
 
 meta_info['noise_file'] += '.json'
 meta_info['probability'] = None
@@ -69,7 +69,7 @@ if args.strong_aug:
     p['augmentation_strategy'] = 'ours'
 
 
-import pdb;pdb.set_trace()
+# import pdb;pdb.set_trace()
 # if args.single_pred:
 #     p['propmix_dir'] = p['propmix_dir']+"_single"
 

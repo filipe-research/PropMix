@@ -228,7 +228,7 @@ def train(p,epoch,net,net2,optimizer,trainloader,criterion,device):
         batch_size = inputs_x.size(0)
         
         # Transform label to one-hot
-        labels_x = torch.zeros(batch_size, p['num_class']).scatter_(1, labels_x.view(-1,1), 1)        
+        labels_x = torch.zeros(batch_size, p['num_classes']).scatter_(1, labels_x.view(-1,1), 1)        
         w_x = w_x.view(-1,1).type(torch.FloatTensor) 
 
         inputs_x, inputs_x2, labels_x, w_x = inputs_x.to(device), inputs_x2.to(device), labels_x.to(device), w_x.to(device)

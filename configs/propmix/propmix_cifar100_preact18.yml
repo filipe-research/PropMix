@@ -7,7 +7,8 @@ dataset: cifar100
 noise_dir: ./noise/cifar100
 plots_dir: plots
 to_noisy_dataset: True
-scan_path: PRN18_10ep_bs512      
+# scan_path: PRN18_10ep_bs512      
+scan_path: r=0.9_800ep_bs1024_preact_rn18
 
 # Loss
 criterion: propmix

@@ -3,7 +3,7 @@ setup: scan
 to_noisy_dataset: False
 dataset: cifar100
 data_path: ../data/cifar100/
-pretext_path: PRN18_10ep_bs512
+pretext_path: PRN18_800ep_bs512
 
 
 # Loss
@@ -48,8 +48,8 @@ optimizer: adam
 optimizer_kwargs:
    lr: 0.0001
    weight_decay: 0.0001
-epochs: 10
-batch_size: 512
+epochs: 100
+batch_size: 1024
 num_workers: 12
 
 # Scheduler

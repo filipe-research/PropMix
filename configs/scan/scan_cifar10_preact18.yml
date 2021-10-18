@@ -1,10 +1,9 @@
 # setup
 setup: scan
 to_noisy_dataset: False
-noise_dir: ./noise/cifar100
-dataset: cifar100
-data_path: ../data/cifar100/
-pretext_path: r=0.9_500ep_bs512_preact_rn18
+dataset: cifar10
+data_path: ../data/cifar10/
+pretext_path: PRN18_800ep_bs512
 
 
 # Loss
@@ -20,9 +19,9 @@ num_heads: 1 # Only use one head
 backbone: PRN18
 
 # Dataset
-train_db_name: cifar-100
-val_db_name: cifar-100
-num_classes: 100
+train_db_name: cifar-10
+val_db_name: cifar-10
+num_classes: 10
 num_neighbors: 20
 
 # Transformations
@@ -49,8 +48,8 @@ optimizer: adam
 optimizer_kwargs:
    lr: 0.0001
    weight_decay: 0.0001
-epochs: 100
-batch_size: 1024
+epochs: 50
+batch_size: 128
 num_workers: 12
 
 # Scheduler

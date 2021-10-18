@@ -83,7 +83,8 @@ class NegEntropy(object):
 
 def create_model():
     
-    model = get_model(p, p['scan_model'])
+    #model = get_model(p, p['scan_model'])
+    model = get_model(p, None)
     model = model.to(device)
     return model
 

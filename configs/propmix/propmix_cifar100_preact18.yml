@@ -26,7 +26,7 @@ warmup: 1
 num_workers: 5
 
 # Transformations
-augmentation_strategy: standard 
+augmentation_strategy: dividemix 
 augmentation_kwargs:
    crop_size: 32
    crop_padding: 4

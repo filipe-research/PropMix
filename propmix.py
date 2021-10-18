@@ -69,7 +69,7 @@ if args.strong_aug:
     p['augmentation_strategy'] = 'ours'
 
 
-import pdb();pdb.set_trace()
+import pdb;pdb.set_trace()
 # if args.single_pred:
 #     p['propmix_dir'] = p['propmix_dir']+"_single"
 

@@ -268,7 +268,7 @@ def train(p,epoch,net,net2,optimizer,trainloader,criterion,device):
         Lx = criterion(logits, mixed_target)
         
         # regularization
-        prior = torch.ones(p['num_class'])/p['num_class']
+        prior = torch.ones(p['num_classes'])/p['num_classes']
         prior = prior.to(device)        
         pred_mean = torch.softmax(logits, dim=1).mean(0)
         penalty = torch.sum(prior*torch.log(prior/pred_mean))

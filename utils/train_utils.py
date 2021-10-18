@@ -216,7 +216,6 @@ def train(p,epoch,net,net2,optimizer,trainloader,criterion,device):
     net2.eval() #fix one network and train the other
     
     labeled_losses = AverageMeter('Labelled Loss', ':.4e')
-    # unlabeled_losses = AverageMeter('Unlabelled Loss', ':.4e')
     progress = ProgressMeter(len(trainloader),
         [labeled_losses],
         prefix="Epoch: [{}]".format(epoch))
@@ -485,33 +484,6 @@ def warmup(epoch,net,optimizer,dataloader,criterion, conf_penalty, noise_mode, d
         if batch_idx % 25 == 0:
             progress.display(batch_idx)
 
-# def dividemix_warmup(epoch,net,optimizer,dataloader,criterion, conf_penalty, noise_mode, device):
-#     net.train()
-#     losses = AverageMeter('CE-Loss', ':.4e')
-#     progress = ProgressMeter(len(dataloader),
-#         [losses],
-#         prefix="Epoch: [{}]".format(epoch))
-#     num_iter = (len(dataloader.dataset)//dataloader.batch_size)+1
-#     for batch_idx, (inputs, labels, path) in enumerate(dataloader):      
-#         inputs, labels = inputs.to(device), labels.to(device) 
-#         optimizer.zero_grad()
-#         # with torch.no_grad():
-#         input_features = net(inputs, forward_pass='backbone')
-#         outputs = net(input_features, forward_pass='dm_head')      
-#         loss = criterion(outputs, labels)  
-#         if noise_mode=='asym' or 'semantic' in noise_mode:  # penalize confident prediction for asymmetric noise
-#             penalty = conf_penalty(outputs)
-#             L = loss + penalty    
-#         elif noise_mode in ['semantic_densenet','semantic_resnet','semantic_vgg']:
-#             penalty = conf_penalty(outputs)
-#             L = loss + penalty     
-#         elif noise_mode=='sym':   
-#             L = loss
-#         L.backward()  
-#         optimizer.step() 
-#         losses.update(L.item()) 
-#         if batch_idx % 25 == 0:
-#             progress.display(batch_idx)
 
 def scanmix_big_warmup(p,epoch,net,optimizer,dataloader,criterion, conf_penalty, noise_mode, device):
     net.train()
@@ -537,35 +509,6 @@ def scanmix_big_warmup(p,epoch,net,optimizer,dataloader,criterion, conf_penalty,
         if batch_idx % 25 == 0:
             progress.display(batch_idx)
 
-# def dividemix_eval_train(args,model,all_loss,epoch,eval_loader,criterion,device):    
-#     model.eval()
-#     losses = torch.zeros(len(eval_loader.dataset))
-#     pl = torch.zeros(len(eval_loader.dataset))    
-#     with torch.no_grad():
-#         for batch_idx, (inputs, targets, index) in enumerate(eval_loader):
-#             inputs, targets = inputs.to(device), targets.to(device) 
-#             outputs = model(inputs, forward_pass='dm')
-#             _, predicted = torch.max(outputs, 1) 
-#             loss = criterion(outputs, targets)  
-#             for b in range(inputs.size(0)):
-#                 losses[index[b]]=loss[b]
-#                 pl[index[b]]  = predicted[b]        
-#     losses = (losses-losses.min())/(losses.max()-losses.min())    # normalised losses for each image
-#     all_loss.append(losses)
-
-#     if args.r==0.9: # average loss over last 5 epochs to improve convergence stability
-#         history = torch.stack(all_loss)
-#         input_loss = history[-5:].mean(0)
-#         input_loss = input_loss.reshape(-1,1)
-#     else:
-#         input_loss = losses.reshape(-1,1)
-
-#     # fit a two-component GMM to the loss
-#     gmm = GaussianMixture(n_components=2,max_iter=10,tol=1e-2,reg_covar=5e-4)
-#     gmm.fit(input_loss)
-#     prob = gmm.predict_proba(input_loss) 
-#     prob = prob[:,gmm.means_.argmin()]         
-#     return prob,all_loss,pl
 
 def eval_train(args,model,all_loss,epoch,eval_loader,criterion,device, num_classes=100):    
     model.eval()

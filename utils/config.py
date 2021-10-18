@@ -61,7 +61,7 @@ def create_config(config_file_env, config_file_exp, meta_info=None):
         else:
             scan_dir = os.path.join(scan_dir, cfg['scan_path'])
             
-        selflabel_dir = os.path.join(base_dir, 'selflabel') 
+        # selflabel_dir = os.path.join(base_dir, 'selflabel') 
         
         
         # if cfg['setup']=='dividemix':
@@ -104,14 +104,14 @@ def create_config(config_file_env, config_file_exp, meta_info=None):
         #     scanmix_dir = os.path.join(scanmix_dir, noise_specific)
         mkdir_if_missing(base_dir)
         mkdir_if_missing(scan_dir)
-        mkdir_if_missing(selflabel_dir)
+        # mkdir_if_missing(selflabel_dir)
         cfg['base_dir'] = os.path.join(base_dir)
         cfg['scan_dir'] = scan_dir
         cfg['scan_checkpoint'] = os.path.join(scan_dir, 'checkpoint.pth.tar')
         cfg['scan_model'] = os.path.join(scan_dir, 'model.pth.tar')
-        cfg['selflabel_dir'] = selflabel_dir
-        cfg['selflabel_checkpoint'] = os.path.join(selflabel_dir, 'checkpoint.pth.tar')
-        cfg['selflabel_model'] = os.path.join(selflabel_dir, 'model.pth.tar')
+        # cfg['selflabel_dir'] = selflabel_dir
+        # cfg['selflabel_checkpoint'] = os.path.join(selflabel_dir, 'checkpoint.pth.tar')
+        # cfg['selflabel_model'] = os.path.join(selflabel_dir, 'model.pth.tar')
         # cfg['scanmix_dir'] = os.path.join(scanmix_dir)
         # cfg['scanmix_checkpoint'] = os.path.join(scanmix_dir, 'checkpoint.pth.tar')
         # cfg['scanmix_model'] = os.path.join(scanmix_dir, 'model.pth.tar')

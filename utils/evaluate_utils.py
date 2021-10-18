@@ -183,24 +183,24 @@ def _hungarian_match(flat_preds, flat_targets, preds_k, targets_k):
 
     return res
 
-@torch.no_grad()
-def scanmix_test(epoch,net1,net2,test_loader,device):
-    net1.eval()
-    net2.eval()
-    correct = 0
-    total = 0
-    with torch.no_grad():
-        for batch_idx, batch in enumerate(test_loader):
-            inputs, targets = batch['image'].to(device), batch['target'].to(device)
-            outputs1 = net1(inputs, forward_pass='dm')
-            outputs2 = net2(inputs, forward_pass='dm')           
-            outputs = outputs1+outputs2
-            _, predicted = torch.max(outputs, 1)            
+# @torch.no_grad()
+# def scanmix_test(epoch,net1,net2,test_loader,device):
+#     net1.eval()
+#     net2.eval()
+#     correct = 0
+#     total = 0
+#     with torch.no_grad():
+#         for batch_idx, batch in enumerate(test_loader):
+#             inputs, targets = batch['image'].to(device), batch['target'].to(device)
+#             outputs1 = net1(inputs, forward_pass='dm')
+#             outputs2 = net2(inputs, forward_pass='dm')           
+#             outputs = outputs1+outputs2
+#             _, predicted = torch.max(outputs, 1)            
                        
-            total += targets.size(0)
-            correct += predicted.eq(targets).cpu().sum().item()                 
-    acc = 100.*correct/total
-    return acc 
+#             total += targets.size(0)
+#             correct += predicted.eq(targets).cpu().sum().item()                 
+#     acc = 100.*correct/total
+#     return acc 
 
 @torch.no_grad()
 def test(epoch,net1,net2,test_loader,device):
@@ -220,27 +220,6 @@ def test(epoch,net1,net2,test_loader,device):
             correct += predicted.eq(targets).cpu().sum().item()                 
     acc = 100.*correct/total
     return acc 
-
-# @torch.no_grad()
-# def scanmix_big_test(epoch,net1,net2,test_loader,device,q):
-#     net1.eval()
-#     net2.eval()
-#     correct = 0
-#     total = 0
-#     with torch.no_grad():
-#         for batch_idx, batch in enumerate(test_loader):
-#             inputs, targets = batch['image'].to(device), batch['target'].to(device)
-#             outputs1 = net1(inputs, forward_pass='dm')
-#             outputs2 = net2(inputs, forward_pass='dm')           
-#             outputs = outputs1+outputs2
-#             _, predicted = torch.max(outputs, 1)            
-                       
-#             total += targets.size(0)
-#             correct += predicted.eq(targets).cpu().sum().item() 
-    
-    
-#     acc = 100.*correct/total
-#     q.put(acc)
 
 @torch.no_grad()
 def scanmix_big_test(epoch,net1,net2,test_loader,device,q):

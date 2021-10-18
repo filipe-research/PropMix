@@ -3,7 +3,7 @@ setup: scan
 to_noisy_dataset: False
 dataset: cifar100
 data_path: ../data/cifar100/
-pretext_path: PRN18_1ep_bs512
+pretext_path: PRN18_10ep_bs512
 
 
 # Loss

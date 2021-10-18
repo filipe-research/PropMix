@@ -167,7 +167,7 @@ class SemiLoss(nn.Module):
         super(SemiLoss, self).__init__()
 
 
-    def forward(self, outputs_x, targets_x,epoch, warm_up):
+    def forward(self, outputs_x, targets_x):
 
         Lx = -torch.mean(torch.sum(F.log_softmax(outputs_x, dim=1) * targets_x, dim=1))
 

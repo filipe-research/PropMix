@@ -30,7 +30,7 @@ def create_config(config_file_env, config_file_exp, meta_info=None):
         # pretext_dir = os.path.join(pretext_dir, noise_specific)
         if cfg['setup']=='simclr':
             #pretext_folder = 'r={}_{}_{}ep_bs{}_{}'.format(meta_info['r'], meta_info['noise_mode'],  cfg['epochs'],cfg['batch_size'], cfg['backbone'])
-            pretext_folder = '_{}ep_bs{}_{}'.format(cfg['epochs'],cfg['batch_size'], cfg['backbone'])
+            pretext_folder = '{}_{}ep_bs{}'.format(cfg['backbone'],cfg['epochs'],cfg['batch_size'])
             pretext_dir = os.path.join(pretext_dir, pretext_folder)
         else:
             pretext_dir = os.path.join(pretext_dir, noise_specific)

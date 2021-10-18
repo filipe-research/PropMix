@@ -20,11 +20,11 @@ In our paper we use [SimCLR](https://github.com/google-research/simclr) for most
 
 If you use SimCLR, run:
 
-`python simclr.py --config_env configs/env.yml --config_exp configs/pretext/<config_file.yml> --gpuid 0`
+`python simclr.py --config_env configs/env.yml --config_exp configs/pretext/<config_file.yml> --cudaid 0`
 
 2. Clustering 
 
-`python scan.py --config_env configs/env.yml --config_exp configs/scan/<config_file.yml>`
+`python scan.py --config_env configs/env.yml --config_exp configs/scan/<config_file.yml> --cudaid 0`
 
 3. Train the model (using the pretraining from steps 1 and 2)
 For symmetric noise:

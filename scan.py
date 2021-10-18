@@ -15,8 +15,6 @@ from utils.train_utils import scan_train
 FLAGS = argparse.ArgumentParser(description='SCAN Loss')
 FLAGS.add_argument('--config_env', help='Location of path config file')
 FLAGS.add_argument('--config_exp', help='Location of experiments config file')
-FLAGS.add_argument('--r', default=0, type=float, help='noise ratio')
-FLAGS.add_argument('--noise_mode',  default='sym')
 FLAGS.add_argument('--cudaid', default=0)
 
 args = FLAGS.parse_args()
@@ -24,16 +22,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = '%s'%(args.cudaid)
 #meta_info
 meta_info = copy.deepcopy(args.__dict__)
 p = create_config(args.config_env, args.config_exp, meta_info)
-# meta_info['noise_file'] = '{}/{:.2f}'.format(p['noise_dir'], args.r)
-meta_info['noise_rate'] = args.r
-if args.noise_mode == 'asym':
-    meta_info['noise_file'] += '_asym'
-elif 'semantic' in args.noise_mode:
-    meta_info['noise_file'] += '_{}'.format(args.noise_mode)
-# meta_info['noise_file'] += '.json'
-# meta_info['dataset'] = p['dataset']
-meta_info['probability'] = None
-meta_info['pred'] = None
+
 meta_info['mode'] = 'pretext'
 
 def main():

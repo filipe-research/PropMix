@@ -22,8 +22,6 @@ parser.add_argument('--config_env',
                     help='Config file for the environment')
 parser.add_argument('--config_exp',
                     help='Config file for the experiment')
-# parser.add_argument('--r', default=0, type=float, help='noise ratio')
-# parser.add_argument('--noise_mode',  default='sym')
 parser.add_argument('--cudaid', default=0)
 args = parser.parse_args()
 
@@ -33,23 +31,6 @@ os.environ["CUDA_VISIBLE_DEVICES"] = '%s'%(args.cudaid)
 meta_info = copy.deepcopy(args.__dict__)
 p = create_config(args.config_env, args.config_exp, meta_info)
 
-
-# meta_info['noise_rate'] = args.r
-# if args.noise_mode == 'asym':
-#     meta_info['noise_file'] += '_asym'
-# elif 'semantic' in args.noise_mode:
-#     meta_info['noise_file'] += '_{}'.format(args.noise_mode)
-
-# The noise mode and noise rate does not matter for simclr, because it
-# does not look to the labels. Here, it is just setting a default
-# noise mode and noise rate to genereate a noise_file (labels) for the dataloader,
-# but the value is not important.
-# noise_mode = 'sym'
-# meta_info['noise_rate'] = 0
-# meta_info['noise_file'] += '_{}'.format(args.noise_mode)
-
-# meta_info['probability'] = None
-# meta_info['pred'] = None
 meta_info['mode'] = 'pretext'
 
 def main():

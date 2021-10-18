@@ -221,7 +221,7 @@ def train(p,epoch,net,net2,optimizer,trainloader,criterion,device):
         [labeled_losses, unlabeled_losses],
         prefix="Epoch: [{}]".format(epoch))
 
-    num_iter = (len(trainloader.dataset)//p['batch_size'])+1
+    
     
     for batch_idx, (inputs_x, inputs_x2, labels_x, w_x) in enumerate(trainloader):      
                          
@@ -236,10 +236,10 @@ def train(p,epoch,net,net2,optimizer,trainloader,criterion,device):
         with torch.no_grad():
             
             # label refinement of labeled samples
-            outputs_x11 = net(inputs_x, forward_pass='dm')
-            outputs_x12 = net(inputs_x2, forward_pass='dm')
-            outputs_x21 = net2(inputs_x, forward_pass='dm')
-            outputs_x22 = net2(inputs_x2, forward_pass='dm')                        
+            outputs_x11 = net(inputs_x)
+            outputs_x12 = net(inputs_x2)
+            outputs_x21 = net2(inputs_x)
+            outputs_x22 = net2(inputs_x2)                        
             
             px = (torch.softmax(outputs_x11, dim=1) + torch.softmax(outputs_x12, dim=1) + torch.softmax(outputs_x21, dim=1) + torch.softmax(outputs_x22, dim=1)) / 4
             px = w_x*labels_x + (1-w_x)*px              
@@ -263,7 +263,7 @@ def train(p,epoch,net,net2,optimizer,trainloader,criterion,device):
         mixed_input = l * input_a + (1 - l) * input_b        
         mixed_target = l * target_a + (1 - l) * target_b
                 
-        logits = net(mixed_input, forward_pass='dm')
+        logits = net(mixed_input)
         
         Lx = criterion(logits, mixed_target)
         
@@ -576,7 +576,7 @@ def eval_train(args,model,all_loss,epoch,eval_loader,criterion,device, num_class
     with torch.no_grad():
         for batch_idx, (inputs, targets, index) in enumerate(eval_loader):
             inputs, targets = inputs.to(device), targets.to(device) 
-            outputs = model(inputs, forward_pass='dm')
+            outputs = model(inputs)
                  
             _, predicted = torch.max(outputs, 1) 
             eval_preds = F.softmax(outputs, -1).cpu().data

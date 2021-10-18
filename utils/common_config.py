@@ -118,7 +118,7 @@ def get_model(p, pretrain_path=None):
         raise ValueError('Invalid setup {}'.format(p['setup']))
 
     # Load pretrained weights
-    import pdb;pdb.set_trace()
+    
     if pretrain_path is not None and os.path.exists(pretrain_path):
         state = torch.load(pretrain_path, map_location='cpu')
         

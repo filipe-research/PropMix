@@ -211,8 +211,8 @@ def test(epoch,net1,net2,test_loader,device):
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(test_loader):
             inputs, targets = inputs.to(device), targets.to(device)
-            outputs1 = net1(inputs, forward_pass='dm')
-            outputs2 = net2(inputs, forward_pass='dm')           
+            outputs1 = net1(inputs)
+            outputs2 = net2(inputs)           
             outputs = outputs1+outputs2
             _, predicted = torch.max(outputs, 1)            
                        

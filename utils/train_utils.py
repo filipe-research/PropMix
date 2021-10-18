@@ -216,9 +216,9 @@ def train(p,epoch,net,net2,optimizer,trainloader,criterion,device):
     net2.eval() #fix one network and train the other
     
     labeled_losses = AverageMeter('Labelled Loss', ':.4e')
-    unlabeled_losses = AverageMeter('Unlabelled Loss', ':.4e')
+    # unlabeled_losses = AverageMeter('Unlabelled Loss', ':.4e')
     progress = ProgressMeter(len(trainloader),
-        [labeled_losses, unlabeled_losses],
+        [labeled_losses],
         prefix="Epoch: [{}]".format(epoch))
 
     

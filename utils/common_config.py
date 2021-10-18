@@ -140,6 +140,7 @@ def get_model(p, pretrain_path=None):
         elif p['setup'] in ['propmix']: # Weights are supposed to be transfered from scan 
             # We only continue with the best head (pop all heads first, then copy back the best head)
             
+            import pdb; pdb.set_trace()
             model_state = state['model']
             
             all_heads = [k for k in model_state.keys() if 'cluster_head' in k]

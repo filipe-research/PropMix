@@ -19,6 +19,7 @@ num_epochs: 2
 alpha: 4
 batch_size: 64
 p_threshold: 0.5
+p_threshold2: 0.5
 T: 0.5
 num_classes: 100
 warmup: 1

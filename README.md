@@ -27,12 +27,14 @@ If you use SimCLR, run:
 `python scan.py --config_env configs/env.yml --config_exp configs/scan/<config_file.yml> --cudaid 0`
 
 3. Train the model (using the pretraining from steps 1 and 2)
-For symmetric noise:
 
-`python propmix.py --r [0.2/0.5/0.8/0.9] --noise_mode sym --config_env configs/env.yml --config_exp configs/propmix/<config_file.yml>`
+For CIFAR-10/CIFAR-100:
 
-For asymetric noise:
-`python propmix.py --r [0.4/0.49] --noise_mode asym --config_env configs/env.yml --config_exp configs/propmix/<config_file.yml>`
+`python propmix.py --r [0.2/0.5/0.8/0.9] --noise_mode [sym/asym] --config_env configs/env.yml --config_exp configs/propmix/<config_file.yml> --cudaid 0` 
+
+Add `--nopt` if you wish to train from scratch, without the self-supervised pretrain, from steps 1 and 2.
+Add `--strong_aug` to use strong augmentation. Recommended for high noise rates.
+
 
 
 ## License and Contributing

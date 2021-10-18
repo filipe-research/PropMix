@@ -174,7 +174,7 @@ def get_train_dataset(p, transform, to_augmented_dataset=False,
         if p['setup'] in ['propmix']:
             from data.cifar_dmix import cifar_dataset
             dataset = cifar_dataset(dataset=p['dataset'],root_dir=p['data_path'],transform=transform, meta_info=meta_info)
-            to_noisy_dataset = False
+            # to_noisy_dataset = False
         else:
             from data.cifar import CIFAR10
             dataset = CIFAR10(root=p['data_path'] , train=True, transform=transform, download=True)
@@ -183,7 +183,7 @@ def get_train_dataset(p, transform, to_augmented_dataset=False,
         if p['setup'] in [ 'propmix']:
             from data.cifar_dmix import cifar_dataset
             dataset = cifar_dataset(dataset=p['dataset'],root_dir=p['data_path'],transform=transform, meta_info=meta_info)
-            to_noisy_dataset = False
+            # to_noisy_dataset = False
         else:
             from data.cifar import CIFAR100
             dataset = CIFAR100(root=p['data_path'], train=True, transform=transform, download=True)

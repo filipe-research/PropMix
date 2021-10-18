@@ -7,30 +7,25 @@ dataset: cifar100
 noise_dir: ./noise/cifar100
 plots_dir: plots
 to_noisy_dataset: True
-scan_path: 'r=0.9_500ep_bs512_preact_rn18'
+scan_path: PRN18_1ep_bs512
 
 # Loss
-criterion: scanmix
+criterion: propmix
 criterion_kwargs:
    entropy_weight: 5.0
 
 # Hyperparameters
-num_epochs: 300
-epochs: 300
+num_epochs: 2
 alpha: 4
 batch_size: 64
-batch_size_scan: 128
 p_threshold: 0.5
 T: 0.5
-num_class: 100
 num_classes: 100
-warmup: 10
+warmup: 1
 num_workers: 5
-update_cluster_head_only: False
-num_neighbors: 20
 
 # Transformations
-augmentation_strategy: dividemix 
+augmentation_strategy: standard 
 augmentation_kwargs:
    crop_size: 32
    crop_padding: 4
@@ -53,7 +48,7 @@ optimizer_kwargs:
 
 #model
 backbone: PRN18
-num_heads: 2
+num_heads: 1
 
 # Scheduler
 scheduler: constant

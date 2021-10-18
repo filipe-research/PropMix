@@ -26,8 +26,7 @@ def get_criterion(p):
     
     elif p['criterion'] in  ['propmix']:
         from losses.losses import SemiLoss
-        from losses.losses import SCANLoss
-        return SemiLoss(), SCANLoss(**p['criterion_kwargs'])
+        return SemiLoss()
 
     else:
         raise ValueError('Invalid criterion {}'.format(p['criterion']))
@@ -105,10 +104,10 @@ def get_model(p, pretrain_path=None):
         from models.models import ContrastiveModel
         model = ContrastiveModel(backbone, **p['model_kwargs'])
 
-    elif p['setup'] in ['scan', 'selflabel']:
+    elif p['setup'] in ['scan']:
         from models.models import ClusteringModel
-        if p['setup'] == 'selflabel':
-            assert(p['num_heads'] == 1)
+        # if p['setup'] == 'selflabel':
+        #     assert(p['num_heads'] == 1)
         model = ClusteringModel(backbone, p['num_classes'], p['num_heads'], p['setup'])
     
     elif p['setup'] in ['propmix']:
@@ -125,20 +124,20 @@ def get_model(p, pretrain_path=None):
         if p['setup'] == 'scan': # Weights are supposed to be transfered from contrastive training
             missing = model.load_state_dict(state, strict=False)
 
-        elif p['setup'] == 'selflabel': # Weights are supposed to be transfered from scan 
-            # We only continue with the best head (pop all heads first, then copy back the best head)
-            model_state = state['model']
-            all_heads = [k for k in model_state.keys() if 'cluster_head' in k]
-            best_head_weight = model_state['cluster_head.%d.weight' %(state['head'])]
-            best_head_bias = model_state['cluster_head.%d.bias' %(state['head'])]
-            for k in all_heads:
-                model_state.pop(k)
+        # elif p['setup'] == 'selflabel': # Weights are supposed to be transfered from scan 
+        #     # We only continue with the best head (pop all heads first, then copy back the best head)
+        #     model_state = state['model']
+        #     all_heads = [k for k in model_state.keys() if 'cluster_head' in k]
+        #     best_head_weight = model_state['cluster_head.%d.weight' %(state['head'])]
+        #     best_head_bias = model_state['cluster_head.%d.bias' %(state['head'])]
+        #     for k in all_heads:
+        #         model_state.pop(k)
 
-            model_state['cluster_head.0.weight'] = best_head_weight
-            model_state['cluster_head.0.bias'] = best_head_bias
-            missing = model.load_state_dict(model_state, strict=True)
+        #     model_state['cluster_head.0.weight'] = best_head_weight
+        #     model_state['cluster_head.0.bias'] = best_head_bias
+        #     missing = model.load_state_dict(model_state, strict=True)
         
-        elif p['setup'] in ['scanmix','propmix']: # Weights are supposed to be transfered from scan 
+        elif p['setup'] in ['propmix']: # Weights are supposed to be transfered from scan 
             # We only continue with the best head (pop all heads first, then copy back the best head)
             
             model_state = state['model']
@@ -357,6 +356,7 @@ def get_train_transformations(p):
                 length = p['augmentation_kwargs']['cutout_kwargs']['length'],
                 random = p['augmentation_kwargs']['cutout_kwargs']['random'])])
 
+    #elif p['augmentation_strategy'] in  ['dividemix','dividemix_webv']:
     elif p['augmentation_strategy'] in  ['dividemix','dividemix_webv']:
         trnfs = []
         if 'resize' in p['augmentation_kwargs'].keys():

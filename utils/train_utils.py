@@ -211,7 +211,7 @@ def scanmix_big_train(p,epoch,net,net2,optimizer,labeled_trainloader,unlabeled_t
         if batch_idx % 25 == 0:
             progress.display(batch_idx)
 
-def train(p,epoch,net,net2,optimizer,trainloader,criterion,lambda_u,device):
+def train(p,epoch,net,net2,optimizer,trainloader,criterion,device):
     net.train()
     net2.eval() #fix one network and train the other
     
@@ -265,7 +265,7 @@ def train(p,epoch,net,net2,optimizer,trainloader,criterion,lambda_u,device):
                 
         logits = net(mixed_input, forward_pass='dm')
         
-        Lx, Lu, lamb = criterion(logits, mixed_target, logits, mixed_target,lambda_u, epoch+batch_idx/num_iter, p['warmup'])
+        Lx = criterion(logits, mixed_target)
         
         # regularization
         prior = torch.ones(p['num_class'])/p['num_class']
@@ -273,15 +273,14 @@ def train(p,epoch,net,net2,optimizer,trainloader,criterion,lambda_u,device):
         pred_mean = torch.softmax(logits, dim=1).mean(0)
         penalty = torch.sum(prior*torch.log(prior/pred_mean))
 
-        loss = Lx + lamb * Lu  + penalty
+        loss = Lx   + penalty
         # compute gradient and do SGD step
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
         labeled_losses.update(Lx.item())
-        unlabeled_losses.update(Lu.item())
-
+        
         if batch_idx % 25 == 0:
             progress.display(batch_idx)
 

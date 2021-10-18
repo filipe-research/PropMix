@@ -166,14 +166,9 @@ class SemiLoss(nn.Module):
     def __init__(self,):
         super(SemiLoss, self).__init__()
 
-    def linear_rampup(self, lambda_u, current, warm_up, rampup_length=16):
-        current = np.clip((current-warm_up) / rampup_length, 0.0, 1.0)
-        return lambda_u*float(current)
 
-    def forward(self, outputs_x, targets_x, outputs_u, targets_u, lambda_u, epoch, warm_up):
-        probs_u = torch.softmax(outputs_u, dim=1)
+    def forward(self, outputs_x, targets_x,epoch, warm_up):
 
         Lx = -torch.mean(torch.sum(F.log_softmax(outputs_x, dim=1) * targets_x, dim=1))
-        Lu = torch.mean((probs_u - targets_u)**2)
 
-        return Lx, Lu, self.linear_rampup(lambda_u, epoch,warm_up)
+        return Lx 

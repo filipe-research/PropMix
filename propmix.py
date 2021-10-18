@@ -25,14 +25,13 @@ from utils.plot_utils import compute_histogram_bins, plot_gmm_remove_noisy, plot
 
 parser = argparse.ArgumentParser(description='PropMix')
 parser.add_argument('--noise_mode',  default='sym')
-parser.add_argument('--lambda_u', default=0, type=float, help='weight for unsupervised loss')
 parser.add_argument('--r', default=0, type=float, help='noise ratio')
 parser.add_argument('--seed', default=123)
-parser.add_argument('--inference', default=None, type=str)
+# parser.add_argument('--inference', default=None, type=str)
 parser.add_argument('--load_state_dict', default=None, type=str)
 parser.add_argument('--cudaid', default=0)
 parser.add_argument('--strong_aug', action='store_true')
-parser.add_argument('--single_pred', action='store_true')
+# parser.add_argument('--single_pred', action='store_true')
 parser.add_argument('--config_env',
                     help='Config file for the environment')
 parser.add_argument('--config_exp',
@@ -69,8 +68,8 @@ meta_info['pred'] = None
 if args.strong_aug:
     p['augmentation_strategy'] = 'ours'
 
-if args.single_pred:
-    p['propmix_dir'] = p['propmix_dir']+"_single"
+# if args.single_pred:
+#     p['propmix_dir'] = p['propmix_dir']+"_single"
 
 Path(os.path.join(p['propmix_dir'], 'savedDicts')).mkdir(parents=True, exist_ok=True)
 Path(os.path.join(p['propmix_dir'], 'plots')).mkdir(parents=True, exist_ok=True)
@@ -141,7 +140,7 @@ def get_loader(p, mode, meta_info):
 
 CE = nn.CrossEntropyLoss(reduction='none')
 CEloss = nn.CrossEntropyLoss()
-criterion_dm, criterion_sl = get_criterion(p)
+criterion_pm = get_criterion(p)
 conf_penalty = NegEntropy()
 
 def main():
@@ -254,10 +253,10 @@ def main():
             preds_noisy_samples1 = pl1_classes[equal_view_noisy]
             preds_noisy_samples2 = pl2_classes[equal_view_noisy]
             # joint_pred = pl1_classes[idx_noisy1]
-            if args.single_pred:
-                joint_pred = (preds_noisy_samples1+preds_noisy_samples1)/2.0
-            else:
-                joint_pred = (preds_noisy_samples1+preds_noisy_samples2)/2.0
+            # if args.single_pred:
+            #     joint_pred = (preds_noisy_samples1+preds_noisy_samples1)/2.0
+            # else:
+            joint_pred = (preds_noisy_samples1+preds_noisy_samples2)/2.0
 
             ### net 1
             sort_distances = np.sort(joint_pred, 1)[:, -2:]
@@ -295,7 +294,7 @@ def main():
             meta_info['idx_remove'] = balanced_idx
             trainloader = get_loader(p, 'train', meta_info)
 
-            train(p, epoch,net1,net2,optimizer1,trainloader, criterion_dm, args.lambda_u, device=device) # train net1  
+            train(p, epoch,net1,net2,optimizer1,trainloader, criterion_pm, device=device) # train net1  
 
             # if not args.big:
             #     scanmix_train(p, epoch,net1,net2,optimizer1,labeled_trainloader, unlabeled_trainloader, criterion_dm, args.lambda_u, device=device) # train net1  
@@ -308,7 +307,7 @@ def main():
             meta_info['pred'] = pred1 #doesnt matter in this approach
             meta_info['idx_remove'] = balanced_idx
             trainloader = get_loader(p, 'train', meta_info)
-            train(p, epoch,net2,net1,optimizer2,trainloader, criterion_dm, args.lambda_u, device=device) # train net2       
+            train(p, epoch,net2,net1,optimizer2,trainloader, criterion_pm, device=device) # train net2       
 
         acc = test(epoch,net1,net2,test_loader, device=device)
         acc_hist.append(acc)

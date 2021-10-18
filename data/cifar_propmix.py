@@ -27,7 +27,7 @@ class cifar_dataset(Dataset):
         noise_mode = meta_info['noise_mode']
         pred = meta_info['pred']
         probability = meta_info['probability']
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         self.transition = {0:0,2:0,4:7,7:7,1:1,9:1,3:5,5:3,6:6,8:8} # class transition for asymmetric noise
      
         if self.mode=='test':

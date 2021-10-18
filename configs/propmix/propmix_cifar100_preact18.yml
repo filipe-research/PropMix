@@ -7,8 +7,7 @@ dataset: cifar100
 noise_dir: ./noise/cifar100
 plots_dir: plots
 to_noisy_dataset: True
-# scan_path: PRN18_1ep_bs512      #comment this line to train without pretrain
-# scan_path: Nonesis
+scan_path: PRN18_10ep_bs512      
 
 # Loss
 criterion: propmix

@@ -208,7 +208,7 @@ def main():
         
         
         inds_noisy = np.asarray([ind for ind in range(len(noisy_labels)) if noisy_labels[ind] != clean_labels[ind]])
-        import pdb; pdb.set_trace()
+        
         inds_clean = np.delete(np.arange(len(noisy_labels)), inds_noisy)
         
         if epoch<p['warmup']:       

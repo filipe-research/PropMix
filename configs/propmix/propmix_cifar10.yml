@@ -1,33 +1,30 @@
 # setup
 setup: propmix
-data_path: ../data/cifar100/cifar-100-python
-train_db_name: cifar-100-plc
-val_db_name: cifar-100-plc
+data_path: ../data/cifar10/cifar-10-batches-py
+train_db_name: cifar-10
+val_db_name: cifar-10
 dataset: cifar100
-noise_dir: ./noise/plc
-# plots_dir: plots
+noise_dir: ./noise/cifar10
+plots_dir: plots
 to_noisy_dataset: True
-scan_path: 'pretrained_resnet34'
+# scan_path: PRN18_10ep_bs512      
+scan_path: PRN18_800ep_bs512
 
 # Loss
-criterion: scanmix
+criterion: propmix
 criterion_kwargs:
    entropy_weight: 5.0
 
 # Hyperparameters
 num_epochs: 300
-epochs: 300
 alpha: 4
 batch_size: 64
-batch_size_scan: 128
 p_threshold: 0.5
+p_threshold2: 0.5
 T: 0.5
-num_class: 100
-num_classes: 100
-warmup: 30
+num_classes: 10
+warmup: 10
 num_workers: 5
-update_cluster_head_only: False
-num_neighbors: 20
 
 # Transformations
 augmentation_strategy: dividemix 
@@ -52,8 +49,8 @@ optimizer_kwargs:
   weight_decay: 0.0005
 
 #model
-backbone: resnet34
-num_heads: 2
+backbone: PRN18
+num_heads: 1
 
 # Scheduler
 scheduler: constant

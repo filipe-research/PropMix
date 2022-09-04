@@ -1,5 +1,5 @@
 # PropMix: Hard Sample Filtering and Proportional MixUp for Learning with Noisy Labels
-This repository is the official implementation of [Hard Sample Filtering and Proportional MixUp for Learning with Noisy Labels](https://arxiv.org) (BMVC 2021).
+This repository is the official implementation of [Hard Sample Filtering and Proportional MixUp for Learning with Noisy Labels](https://arxiv.org/abs/2110.11809) (BMVC 2021).
 
 <b>Authors</b>: Filipe R. Cordeiro; Vasileios Belagiannis, Ian Reid and Gustavo Carneiro
 

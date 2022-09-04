@@ -46,12 +46,22 @@ Add `--strong_aug` to use strong augmentation. Recommended for high noise rates.
 If you find the code useful in your research, please consider citing our paper:
 
 ```
-@article{cordeiroPropMix2021,
-  title={PropMix: Hard Sample Filtering and Proportional MixUp for Learning with Noisy Labels},
-  author={Cordeiro, F. R. and Belagiannis, Vasileios and Reid, Ian and Carneiro, Gustavo},
-  journal={The 32nd British Machine Vision Conference},
-  volume={?},
-  year={2021}
+@inproceedings{DBLP:conf/bmvc/CordeiroB0C21,
+  author    = {Filipe Rolim Cordeiro and
+               Vasileios Belagiannis and
+               Ian Reid and
+               Gustavo Carneiro},
+  title     = {PropMix: Hard Sample Filtering and Proportional MixUp for Learning
+               with Noisy Labels},
+  booktitle = {32nd British Machine Vision Conference 2021, {BMVC} 2021, Online,
+               November 22-25, 2021},
+  pages     = {187},
+  publisher = {{BMVA} Press},
+  year      = {2021},
+  url       = {https://www.bmvc2021-virtualconference.com/assets/papers/0908.pdf},
+  timestamp = {Wed, 22 Jun 2022 01:00:00 +0200},
+  biburl    = {https://dblp.org/rec/conf/bmvc/CordeiroB0C21.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
 }
 ```
 ## Contact
